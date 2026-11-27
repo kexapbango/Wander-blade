@@ -1,0 +1,10 @@
+{
+  "name": "Wanderblade",
+  "short_name": "Wanderblade",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#120d09",
+  "theme_color": "#3a2718"
+}

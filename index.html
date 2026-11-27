@@ -2,14 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#3a2718">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
 <title>Wanderblade</title>
 <style>
 @font-face { font-family: KF; src: url('assets/font/KenneyFuture.ttf'); }
-:root { --ink:#2b1d14; --cream:#f6e8c8; --orange:#ffa62b; }
+:root { --ink:#2b1d14; --cream:#f6e8c8; --orange:#ffa62b; --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px); }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin:0; height:100%; background:#120d09; font-family: KF, system-ui, sans-serif; color:var(--ink); overflow:hidden; user-select:none; }
-#wrap { position:relative; height:min(100vh, calc(100vw * 16 / 9)); aspect-ratio:9/16; margin:0 auto; top:50%; transform:translateY(-50%); background:var(--cream); overflow:hidden; }
+/* Fill the whole screen on phones (any tall ratio, e.g. 1080x2436); only pillarbox on wide desktop screens */
+#wrap { position:fixed; top:0; bottom:0; left:50%; transform:translateX(-50%); height:100vh; height:100dvh; width:100%; max-width:calc(100vh * 9 / 16); max-width:calc(100dvh * 9 / 16); background:var(--cream); overflow:hidden; }
+@media (max-aspect-ratio: 9/16) { #wrap { max-width:none; } }
 /* 9-slice helpers built from the Kenney UI pack */
 .panel { border:.9em solid transparent; border-image:url(assets/ui/panel_brown.png) 24 fill / .9em stretch; }
 .dark  { border:.9em solid transparent; border-image:url(assets/ui/panel_brown_dark.png) 24 fill / .9em stretch; color:#fff; }
@@ -17,20 +24,48 @@ html, body { margin:0; height:100%; background:#120d09; font-family: KF, system-
 .btn.red { border-image-source:url(assets/ui/button_red.png); } .btn.grey { border-image-source:url(assets/ui/button_grey.png); }
 .btn:active { transform:translateY(.12em); }
 /* top bar */
-#top { position:absolute; left:0; right:0; top:0; height:7%; display:flex; gap:.5em; padding:.5em; align-items:center; z-index:5; font-size:.8em; background:#3a2718; }
+#top { position:absolute; left:0; right:0; top:0; height:calc(7% + var(--st)); display:flex; gap:.5em; padding:calc(.5em + var(--st)) .5em .5em; align-items:center; z-index:5; font-size:.8em; background:#3a2718; }
 .pill { flex:1; display:flex; align-items:center; gap:.4em; padding:.15em .4em; background:#1d130c; border-radius:1em; color:#fff; min-width:0; }
 .pill img { height:1.6em; } .pill.hung { flex:1.7; } .bar { flex:1; height:1em; background:#0008; border-radius:1em; overflow:hidden; } .bar i { display:block; height:100%; width:100%; background:#6bd36b; }
 /* pages */
-.page { position:absolute; left:0; right:0; top:7%; bottom:11%; display:none; }
+.page { position:absolute; left:0; right:0; top:calc(7% + var(--st)); bottom:calc(11% + var(--sb)); display:none; }
 .page.on { display:block; }
 /* adventure */
-#scene { position:absolute; inset:0 0 0 0; background:url(assets/bg/backgroundColorForest.png) center bottom / cover; }
-#scene h2 { position:absolute; top:1em; width:100%; text-align:center; margin:0; font-size:1.7em; color:#fff; text-shadow:0 .1em 0 #000a, 0 0 .4em #000a; }
-#scene p.sub { position:absolute; top:4.4em; width:100%; text-align:center; margin:0; color:#fff; font-size:.8em; text-shadow:0 .1em 0 #000a; }
-#go { position:absolute; left:50%; bottom:9%; transform:translateX(-50%); font-size:2em; padding:.25em 1.4em; }
-#go:active { transform:translateX(-50%) translateY(.12em); }
-#stop { position:absolute; left:.8em; bottom:1em; font-size:.8em; display:none; }
-#log { position:absolute; left:4%; right:4%; bottom:2%; font-size:.8em; padding:.2em; line-height:1.5; display:none; }
+#p-adv { overflow:hidden; }
+#cv { position:absolute; inset:0; width:100%; height:100%; display:block; }
+#stageName { position:absolute; top:1.1em; width:100%; text-align:center; margin:0; font-size:1.5em; color:#fff; text-shadow:0 .1em 0 #0007; transition:opacity .3s; pointer-events:none; }
+/* chunky rounded buttons */
+.cbtn { font-family:inherit; color:#fff; font-size:1.5em; border:.13em solid #2b1d14; border-radius:.7em; padding:.45em 2.2em; cursor:pointer;
+  text-shadow:0 .08em 0 #0005; box-shadow:inset 0 -.28em 0 #0003, inset 0 .16em 0 #fff6, 0 .18em 0 #2b1d14; transition:transform .08s, filter .2s; }
+.cbtn:active { transform:translateY(.12em); box-shadow:inset 0 -.15em 0 #0003, inset 0 .16em 0 #fff6, 0 .06em 0 #2b1d14; }
+.cbtn.yellow { background:linear-gradient(#ffd34e, #ffa81f); } .cbtn.green { background:linear-gradient(#93e35a, #4fb52e); }
+.cbtn.red { background:linear-gradient(#f2766a, #d4483c); } .cbtn.grey { background:linear-gradient(#c9c2b8, #988f84); }
+#start { position:absolute; left:50%; bottom:10%; transform:translateX(-50%); padding:.45em 2.6em; font-size:1.7em; transition:opacity .25s; }
+#start:active { transform:translateX(-50%) translateY(.12em); }
+body.run #start, body.run #stageName { opacity:0; pointer-events:none; }
+/* running panel: stats + dialogue + continue */
+#panel { position:absolute; left:0; right:0; top:50%; bottom:0; display:flex; flex-direction:column; gap:.45em; padding:0 .7em .5em;
+  background:#2c2232 radial-gradient(#ffffff0d 18%, transparent 19%) 0 0 / 2.2em 2.2em; transform:translateY(105%); transition:transform .35s ease; }
+body.run #panel { transform:none; }
+#statbar { display:flex; gap:.4em; align-items:center; margin:0 -.7em; padding:.35em .6em; background:#3a2718; border-top:.2em solid #1d130c; border-bottom:.2em solid #1d130c; color:#fff; font-size:.8em; }
+#statbar .st { display:flex; align-items:center; gap:.3em; background:#1d130c; border-radius:1em; padding:.15em .55em; white-space:nowrap; }
+#statbar .hp { flex:1; } #statbar .hpbar { flex:1; height:1.1em; background:#0008; border-radius:1em; overflow:hidden; position:relative; }
+#statbar .hpbar i { position:absolute; inset:0; background:linear-gradient(#ff7b7b,#e04848); } #statbar .hpbar span { position:relative; display:block; text-align:center; font-size:.8em; line-height:1.4em; }
+#statbar svg { width:1.2em; height:1.2em; fill:currentColor; }
+#dayhead { color:#fff; font-size:.9em; margin-top:.1em; }
+#log { flex:1; min-height:0; overflow-y:auto; background:#f9ebcb; border:.18em solid #b48a5a; border-radius:.6em; padding:.5em .7em; font-size:.8em; line-height:1.55; color:#3d2a1a; }
+#log p { margin:0 0 .35em; } #log p:last-child { animation:pop .3s ease; } #log .muted { color:#9a8268; }
+@keyframes pop { from { opacity:0; transform:translateY(.4em); } }
+#next { align-self:center; width:70%; padding:.35em 0; }
+#end { align-self:center; font-size:.75em; padding:.25em 1.4em; margin-top:-.1em; }
+/* pause button + overlays */
+#pauseBtn { flex:none; width:2.4em; height:2.4em; border-radius:.6em; border:.13em solid #1d130c; background:#5a3d27; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; visibility:hidden; }
+#pauseBtn svg { width:1.2em; height:1.2em; fill:currentColor; } body.run #pauseBtn { visibility:visible; }
+.ov { position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center; background:#0009; }
+.ov.on { display:flex; }
+.ov .box { background:#f9ebcb; border:.2em solid #2b1d14; border-radius:1em; padding:1.2em 1.4em; text-align:center; width:80%; box-shadow:0 .3em 0 #2b1d14; }
+.ov h3 { margin:0 0 .4em; font-size:1.4em; } .ov p { margin:0 0 1em; line-height:1.5; font-size:.9em; }
+.ov .row { display:flex; gap:.6em; justify-content:center; } .ov .cbtn { font-size:1em; padding:.4em 1.2em; }
 /* equip */
 #p-equip { background:var(--cream); }
 #hero { position:relative; height:40%; }
@@ -42,7 +77,7 @@ html, body { margin:0; height:100%; background:#120d09; font-family: KF, system-
 #grid { display:grid; grid-template-columns:repeat(5,1fr); gap:.4em; } #grid div { aspect-ratio:1; background:#e3cfa5; border:.15em solid #7b5a3a; border-radius:.4em; }
 .soon { margin:2em 1.2em; text-align:center; padding:1em; line-height:1.7; }
 /* tabs */
-#tabs { position:absolute; left:0; right:0; bottom:0; height:11%; display:flex; align-items:flex-end; background:#3a2718; border-top:.2em solid #1d130c; }
+#tabs { position:absolute; left:0; right:0; bottom:0; height:calc(11% + var(--sb)); padding-bottom:var(--sb); display:flex; align-items:flex-end; background:#3a2718; border-top:.2em solid #1d130c; }
 .tab { flex:1; height:84%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.2em; color:#c9b08a; font-size:.62em; cursor:pointer; background:none; border:0; font-family:inherit; }
 .tab svg { width:2.6em; height:2.6em; fill:currentColor; } .tab.on { color:#fff; background:#5a3d27; }
 .tab.mid { flex:1.5; height:100%; } .tab.mid svg { width:3.6em; height:3.6em; }
@@ -50,7 +85,7 @@ html, body { margin:0; height:100%; background:#120d09; font-family: KF, system-
 </head>
 <body>
 <div id="wrap">
-  <div id="top"><div class="pill hung">Hunger <div class="bar"><i id="hunger"></i></div></div><div class="pill"><img src="assets/items/genericItem_color_159.png"><b id="coins">0</b></div><div class="pill"><img src="assets/items/genericItem_color_141.png"><b id="junk">0</b></div></div>
+  <div id="top"><button id="pauseBtn" aria-label="Pause"><svg viewBox="0 0 20 20"><rect x="4" y="3" width="4.5" height="14" rx="1"/><rect x="11.5" y="3" width="4.5" height="14" rx="1"/></svg></button><div class="pill hung">Hunger <div class="bar"><i id="hunger"></i></div></div><div class="pill"><img src="assets/items/genericItem_color_159.png"><b id="coins">0</b></div><div class="pill"><img src="assets/items/genericItem_color_141.png"><b id="junk">0</b></div></div>
 
   <div class="page" id="p-shop"><div class="panel soon">SHOP<br><small>Coming soon: spend coins and junk here.</small></div></div>
 
@@ -60,21 +95,39 @@ html, body { margin:0; height:100%; background:#120d09; font-family: KF, system-
     <div id="inv" class="panel"><h3>My Equipment</h3><div id="grid"></div></div>
   </div>
 
-  <div class="page on" id="p-adv"><div id="scene"><h2>1. Meadow Road</h2><p class="sub">Tap START to begin your adventure</p>
-    <button class="btn" id="go">START</button><button class="btn red" id="stop">STOP</button><div id="log" class="dark"></div></div></div>
+  <div class="page on" id="p-adv">
+    <canvas id="cv"></canvas>
+    <h2 id="stageName">1. Meadow Road</h2>
+    <button class="cbtn yellow" id="start">START</button>
+    <div id="panel">
+      <div id="statbar">
+        <span class="st">Lv.<b id="sLv">1</b></span>
+        <span class="st hp"><svg viewBox="0 0 20 20"><path d="M10 18S2 12.5 2 7a4 4 0 018-1.5A4 4 0 0118 7c0 5.5-8 11-8 11z" fill="#ff6b6b"/></svg><span class="hpbar"><i id="sHpBar"></i><span id="sHp">100/100</span></span></span>
+        <span class="st"><svg viewBox="0 0 20 20"><path d="M15 2h3v3L8 15l-3-3zM3 13l4 4-2 1-3-3z" fill="#cfd8e3"/></svg><b id="sAtk">12</b></span>
+        <span class="st"><svg viewBox="0 0 20 20"><path d="M10 1l8 3v5c0 5-3.5 8.5-8 10C5.5 17.5 2 14 2 9V4z" fill="#6aa8ff"/></svg><b id="sDef">1</b></span>
+      </div>
+      <div id="dayhead">Day <span id="day">1</span></div>
+      <div id="log"></div>
+      <button class="cbtn green" id="next">CONTINUE</button>
+      <button class="cbtn red" id="end">End run</button>
+    </div>
+    <div class="ov" id="pauseOv"><div class="box"><h3>Paused</h3><p>Your hero is waiting.</p><div class="row"><button class="cbtn green" id="resume">Resume</button></div></div></div>
+    <div class="ov" id="confirmOv"><div class="box"><h3 id="cTitle">End run?</h3><p id="cMsg"></p><div class="row"><button class="cbtn grey" id="cNo">Cancel</button><button class="cbtn red" id="cYes">Yes</button></div></div></div>
+  </div>
 
   <div class="page" id="p-skills"><div class="panel soon">SKILLS<br><small>Coming soon: skills you kept from your wins.</small></div></div>
-  <div class="page" id="p-loot"><div class="panel soon">LOOT<br><small>Coming soon: junk and materials you collected.</small></div></div>
+  <div class="page" id="p-upgrade"><div class="panel soon">UPGRADE<br><small>Coming soon: spend coins to raise ATK, HP and DEF.</small></div></div>
 
   <div id="tabs">
     <button class="tab" data-p="shop"><svg viewBox="0 0 32 32"><path d="M3 11l3-7h20l3 7v3H3z"/><rect x="5" y="16" width="22" height="12" rx="1"/></svg>Shop</button>
     <button class="tab" data-p="equip"><svg viewBox="0 0 32 32"><path d="M4 21a12 12 0 0124 0v6H4z"/><rect x="11" y="17" width="10" height="5" fill="#3a2718"/></svg>Equip</button>
     <button class="tab mid on" data-p="adv"><svg viewBox="0 0 32 32"><path d="M4 4l3-1 12 12-3 3L4 6zM28 4l-3-1L13 15l3 3 12-12zM8 22l3 3-4 4-3-3zM24 22l-3 3 4 4 3-3z"/></svg>Adventure</button>
     <button class="tab" data-p="skills"><svg viewBox="0 0 32 32"><path d="M16 2l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z"/></svg>Skills</button>
-    <button class="tab" data-p="loot"><svg viewBox="0 0 32 32"><path d="M4 12a12 8 0 0124 0z"/><rect x="4" y="13" width="24" height="14" rx="1"/><rect x="14" y="14" width="4" height="6" fill="#3a2718"/></svg>Loot</button>
+    <button class="tab" data-p="upgrade"><svg viewBox="0 0 32 32"><path d="M16 2l12 7v14l-12 7-12-7V9z"/><path d="M16 8l7 8h-4v7h-6v-7H9z" fill="#3a2718"/></svg>Upgrade</button>
   </div>
 </div>
 <script src="js/data.js"></script>
+<script src="js/scene.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
