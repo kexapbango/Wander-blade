@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Wanderblade</title>
+<style>
+@font-face { font-family: KF; src: url('assets/font/KenneyFuture.ttf'); }
+:root { --ink:#1b2233; --panel:#fff7e6; --orange:#ffa62b; }
+* { box-sizing: border-box; }
+html, body { margin:0; height:100%; background:#10141f; font-family: KF, system-ui, sans-serif; color:var(--ink); overflow:hidden; }
+#wrap { position:relative; width:min(100vw, calc(100vh * 16 / 9)); aspect-ratio:16/9; margin:0 auto; top:50%; transform:translateY(-50%); }
+canvas { width:100%; height:100%; display:block; image-rendering:auto; }
+.layer { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:1.2%; text-align:center; }
+#menu { display:flex; background:rgba(16,20,31,.82); color:#fff; font-size:clamp(9px,1.5vw,16px); }
+#menu h1 { margin:0; font-size:3.2em; color:var(--orange); text-shadow:0 .08em 0 #7a3b00; letter-spacing:.05em; }
+.row { display:flex; gap:1em; align-items:stretch; justify-content:center; flex-wrap:wrap; }
+.row > span { background:#0006; padding:.5em 1em; border-radius:.6em; }
+.slot { background:var(--panel); color:var(--ink); border:.25em solid; border-radius:.8em; padding:.7em; width:15em; display:flex; flex-direction:column; gap:.4em; text-transform:capitalize; }
+.slot span { font-size:.85em; opacity:.8; }
+button { font-family:inherit; font-size:1em; border:.18em solid var(--ink); border-radius:.6em; background:#e8edf5; color:var(--ink); padding:.55em 1em; cursor:pointer; box-shadow:0 .2em 0 #0004; }
+button:active { transform:translateY(.12em); box-shadow:none; }
+button:disabled { opacity:.4; cursor:default; }
+button.go { background:var(--orange); font-size:1.8em; padding:.4em 2em; margin-top:.3em; }
+.hint { margin:0; font-size:.8em; opacity:.8; max-width:46em; line-height:1.5; }
+#pick { background:rgba(16,20,31,.78); color:#fff; font-size:clamp(9px,1.5vw,16px); }
+#pick h2 { margin:0 0 .5em; }
+#cards { display:flex; gap:1.2em; }
+.card { width:13em; min-height:15em; background:var(--panel); color:var(--ink); border:.3em solid; border-radius:1em; padding:1.1em; display:flex; flex-direction:column; gap:.8em; cursor:pointer; transition:transform .12s; justify-content:center; }
+.card:hover { transform:translateY(-.6em) scale(1.04); }
+.card b { font-size:1.25em; } .card span { font-size:.9em; line-height:1.4; }
+#over { background:rgba(16,20,31,.85); color:#fff; font-size:clamp(9px,1.5vw,16px); }
+#log { position:absolute; left:1.5%; bottom:1.5%; display:flex; flex-direction:column-reverse; gap:.3em; font-size:clamp(8px,1.2vw,13px); pointer-events:none; max-width:45%; }
+#log div { background:#fff7e6e6; padding:.35em .7em; border-radius:.5em; border:.15em solid var(--ink); }
+#ctl { position:absolute; right:1.5%; bottom:2%; display:none; gap:1em; font-size:clamp(10px,1.8vw,20px); }
+#ctl button { padding:1em 1.4em; touch-action:none; user-select:none; }
+#bBlock.rdy { background:#6fb5ff; } #bSkill.rdy { background:var(--orange); }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="cv" width="960" height="540"></canvas>
+  <div id="log"></div>
+  <div id="ctl"><button id="bBlock">BLOCK (Space)</button><button id="bSkill">SKILL (E)</button></div>
+  <div id="menu" class="layer"></div>
+  <div id="pick" class="layer"><h2 id="cardT"></h2><div id="cards"></div></div>
+  <div id="over" class="layer"></div>
+</div>
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
