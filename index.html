@@ -6,44 +6,75 @@
 <title>Wanderblade</title>
 <style>
 @font-face { font-family: KF; src: url('assets/font/KenneyFuture.ttf'); }
-:root { --ink:#1b2233; --panel:#fff7e6; --orange:#ffa62b; }
-* { box-sizing: border-box; }
-html, body { margin:0; height:100%; background:#10141f; font-family: KF, system-ui, sans-serif; color:var(--ink); overflow:hidden; }
-#wrap { position:relative; height:min(100vh, calc(100vw * 16 / 9)); aspect-ratio:9/16; margin:0 auto; top:50%; transform:translateY(-50%); }
-canvas { width:100%; height:100%; display:block; }
-.layer { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; gap:1em; text-align:center; padding:1em; }
-#menu { display:flex; background:rgba(16,20,31,.84); color:#fff; }
-#menu h1 { margin:0; font-size:3.4em; line-height:1; color:var(--orange); text-shadow:0 .08em 0 #7a3b00; }
-.row { display:flex; gap:.7em; justify-content:center; flex-wrap:wrap; }
-.row > span { background:#0006; padding:.5em .9em; border-radius:.6em; }
-button { font-family:inherit; font-size:1em; border:.16em solid var(--ink); border-radius:.6em; background:#e8edf5; color:var(--ink); padding:.55em .9em; cursor:pointer; box-shadow:0 .2em 0 #0004; }
-button:active { transform:translateY(.12em); box-shadow:none; }
-button:disabled { opacity:.4; cursor:default; }
-button.go { background:var(--orange); font-size:1.7em; padding:.4em 1.8em; }
-.hint { margin:0; font-size:.75em; opacity:.85; line-height:1.6; }
-#pick { background:rgba(16,20,31,.8); color:#fff; }
-#pick h2 { margin:0; font-size:1.2em; }
-#cards { display:flex; flex-direction:column; gap:.8em; width:92%; }
-.card { background:var(--panel); color:var(--ink); border:.25em solid; border-radius:.9em; padding:.8em 1em; display:flex; flex-direction:column; gap:.35em; cursor:pointer; }
-.card b { font-size:1.2em; } .card span { font-size:.85em; } .card small { font-size:.7em; }
-#over { background:rgba(16,20,31,.86); color:#fff; }
-#log { position:absolute; left:4%; right:4%; top:66%; display:none; background:#fff7e6; border:.18em solid var(--ink); border-radius:.8em; padding:.6em .9em; font-size:.8em; line-height:1.5; min-height:7.2em; }
-#log p { margin:0 0 .3em; opacity:.45; } #log p.new { opacity:1; font-weight:bold; }
-#ctl { position:absolute; left:4%; right:4%; bottom:3%; display:none; gap:.8em; }
-#ctl button { flex:1; padding:1.1em .5em; font-size:1.2em; touch-action:none; user-select:none; }
-#bBlock.rdy { background:#6fb5ff; } #bSkill.rdy { background:var(--orange); }
+:root { --ink:#2b1d14; --cream:#f6e8c8; --orange:#ffa62b; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin:0; height:100%; background:#120d09; font-family: KF, system-ui, sans-serif; color:var(--ink); overflow:hidden; user-select:none; }
+#wrap { position:relative; height:min(100vh, calc(100vw * 16 / 9)); aspect-ratio:9/16; margin:0 auto; top:50%; transform:translateY(-50%); background:var(--cream); overflow:hidden; }
+/* 9-slice helpers built from the Kenney UI pack */
+.panel { border:.9em solid transparent; border-image:url(assets/ui/panel_brown.png) 24 fill / .9em stretch; }
+.dark  { border:.9em solid transparent; border-image:url(assets/ui/panel_brown_dark.png) 24 fill / .9em stretch; color:#fff; }
+.btn { font-family:inherit; font-size:1em; color:#4a2f18; border:.7em solid transparent; border-image:url(assets/ui/button_brown.png) 20 fill / .7em stretch; background:none; padding:.2em .9em; cursor:pointer; }
+.btn.red { border-image-source:url(assets/ui/button_red.png); } .btn.grey { border-image-source:url(assets/ui/button_grey.png); }
+.btn:active { transform:translateY(.12em); }
+/* top bar */
+#top { position:absolute; left:0; right:0; top:0; height:7%; display:flex; gap:.5em; padding:.5em; align-items:center; z-index:5; font-size:.8em; background:#3a2718; }
+.pill { flex:1; display:flex; align-items:center; gap:.4em; padding:.15em .4em; background:#1d130c; border-radius:1em; color:#fff; min-width:0; }
+.pill img { height:1.6em; } .pill.hung { flex:1.7; } .bar { flex:1; height:1em; background:#0008; border-radius:1em; overflow:hidden; } .bar i { display:block; height:100%; width:100%; background:#6bd36b; }
+/* pages */
+.page { position:absolute; left:0; right:0; top:7%; bottom:11%; display:none; }
+.page.on { display:block; }
+/* adventure */
+#scene { position:absolute; inset:0 0 0 0; background:url(assets/bg/backgroundColorForest.png) center bottom / cover; }
+#scene h2 { position:absolute; top:1em; width:100%; text-align:center; margin:0; font-size:1.7em; color:#fff; text-shadow:0 .1em 0 #000a, 0 0 .4em #000a; }
+#scene p.sub { position:absolute; top:4.4em; width:100%; text-align:center; margin:0; color:#fff; font-size:.8em; text-shadow:0 .1em 0 #000a; }
+#go { position:absolute; left:50%; bottom:9%; transform:translateX(-50%); font-size:2em; padding:.25em 1.4em; }
+#go:active { transform:translateX(-50%) translateY(.12em); }
+#stop { position:absolute; left:.8em; bottom:1em; font-size:.8em; display:none; }
+#log { position:absolute; left:4%; right:4%; bottom:2%; font-size:.8em; padding:.2em; line-height:1.5; display:none; }
+/* equip */
+#p-equip { background:var(--cream); }
+#hero { position:relative; height:40%; }
+.slot { position:absolute; width:4.6em; height:4.6em; border:.2em solid #7b5a3a; border-radius:.5em; background:#e3cfa5; }
+.slot.r { right:.8em; } .slot.l { left:.8em; } .s1{top:.8em} .s2{top:6.2em} .s3{top:11.6em}
+#hero img.char { position:absolute; left:50%; top:22%; width:9em; transform:translateX(-50%); }
+#stats { display:flex; justify-content:center; gap:.6em; font-size:.8em; margin:.2em 0 .6em; } #stats span { padding:.2em .8em; background:#7b5a3a; color:#fff; border-radius:1em; }
+#inv { margin:0 .5em; height:44%; text-align:center; overflow-y:auto; } #inv h3 { margin:.1em 0 .4em; font-size:1em; }
+#grid { display:grid; grid-template-columns:repeat(5,1fr); gap:.4em; } #grid div { aspect-ratio:1; background:#e3cfa5; border:.15em solid #7b5a3a; border-radius:.4em; }
+.soon { margin:2em 1.2em; text-align:center; padding:1em; line-height:1.7; }
+/* tabs */
+#tabs { position:absolute; left:0; right:0; bottom:0; height:11%; display:flex; align-items:flex-end; background:#3a2718; border-top:.2em solid #1d130c; }
+.tab { flex:1; height:84%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.2em; color:#c9b08a; font-size:.62em; cursor:pointer; background:none; border:0; font-family:inherit; }
+.tab svg { width:2.6em; height:2.6em; fill:currentColor; } .tab.on { color:#fff; background:#5a3d27; }
+.tab.mid { flex:1.5; height:100%; } .tab.mid svg { width:3.6em; height:3.6em; }
 </style>
 </head>
 <body>
 <div id="wrap">
-  <canvas id="cv" width="540" height="960"></canvas>
-  <div id="log"></div>
-  <div id="ctl"><button id="bBlock">BLOCK</button><button id="bSkill">SKILL</button></div>
-  <div id="menu" class="layer"></div>
-  <div id="pick" class="layer"><h2 id="cardT"></h2><div id="cards"></div><button id="reroll" onclick="reroll()"></button></div>
-  <div id="over" class="layer"></div>
+  <div id="top"><div class="pill hung">Hunger <div class="bar"><i id="hunger"></i></div></div><div class="pill"><img src="assets/items/genericItem_color_159.png"><b id="coins">0</b></div><div class="pill"><img src="assets/items/genericItem_color_141.png"><b id="junk">0</b></div></div>
+
+  <div class="page" id="p-shop"><div class="panel soon">SHOP<br><small>Coming soon: spend coins and junk here.</small></div></div>
+
+  <div class="page" id="p-equip">
+    <div id="hero"><div class="slot l s1"></div><div class="slot l s2"></div><div class="slot l s3"></div><div class="slot r s1"></div><div class="slot r s2"></div><div class="slot r s3"></div><img class="char" src="assets/chars/character_beige_idle.png"></div>
+    <div id="stats"><span>HP 100</span><span>ATK 12</span><span>DEF 1</span></div>
+    <div id="inv" class="panel"><h3>My Equipment</h3><div id="grid"></div></div>
+  </div>
+
+  <div class="page on" id="p-adv"><div id="scene"><h2>1. Meadow Road</h2><p class="sub">Tap START to begin your adventure</p>
+    <button class="btn" id="go">START</button><button class="btn red" id="stop">STOP</button><div id="log" class="dark"></div></div></div>
+
+  <div class="page" id="p-skills"><div class="panel soon">SKILLS<br><small>Coming soon: skills you kept from your wins.</small></div></div>
+  <div class="page" id="p-loot"><div class="panel soon">LOOT<br><small>Coming soon: junk and materials you collected.</small></div></div>
+
+  <div id="tabs">
+    <button class="tab" data-p="shop"><svg viewBox="0 0 32 32"><path d="M3 11l3-7h20l3 7v3H3z"/><rect x="5" y="16" width="22" height="12" rx="1"/></svg>Shop</button>
+    <button class="tab" data-p="equip"><svg viewBox="0 0 32 32"><path d="M4 21a12 12 0 0124 0v6H4z"/><rect x="11" y="17" width="10" height="5" fill="#3a2718"/></svg>Equip</button>
+    <button class="tab mid on" data-p="adv"><svg viewBox="0 0 32 32"><path d="M4 4l3-1 12 12-3 3L4 6zM28 4l-3-1L13 15l3 3 12-12zM8 22l3 3-4 4-3-3zM24 22l-3 3 4 4 3-3z"/></svg>Adventure</button>
+    <button class="tab" data-p="skills"><svg viewBox="0 0 32 32"><path d="M16 2l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z"/></svg>Skills</button>
+    <button class="tab" data-p="loot"><svg viewBox="0 0 32 32"><path d="M4 12a12 8 0 0124 0z"/><rect x="4" y="13" width="24" height="14" rx="1"/><rect x="14" y="14" width="4" height="6" fill="#3a2718"/></svg>Loot</button>
+  </div>
 </div>
 <script src="js/data.js"></script>
-<script src="js/game.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
